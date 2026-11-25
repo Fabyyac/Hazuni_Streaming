@@ -339,8 +339,8 @@ select option { color: #dedbe7; background: #171621; }
   .card-meta { font-size: 7px; }
   .page-footer { flex-direction: column; margin-top: 22px; font-size: 7px; }
   .floating-add { position: fixed; z-index: 5; right: 18px; bottom: 18px; display: grid; width: 49px; height: 49px; place-items: center; color: white; border: 1px solid rgba(211,179,255,.44); border-radius: 16px; background: linear-gradient(145deg,#9f5aff,#7237c6); box-shadow: 0 6px 22px rgba(134,58,224,.4); cursor: pointer; }
-  .modal-backdrop { align-items: end; padding: 0; }
-  .modal, .modal-wide { width: 100%; max-height: 94vh; border-right: 0; border-bottom: 0; border-left: 0; border-radius: 15px 15px 0 0; }
+  .modal-backdrop { align-items: end; padding: env(safe-area-inset-top) 0 max(32px, env(safe-area-inset-bottom)); }
+  .modal, .modal-wide { width: 100%; max-height: 94vh; max-height: calc(100dvh - env(safe-area-inset-top) - max(32px, env(safe-area-inset-bottom))); scroll-padding-bottom: 96px; border-right: 0; border-bottom: 0; border-left: 0; border-radius: 15px 15px 0 0; }
   .modal-header { padding: 14px 16px; }
   .media-form { padding: 14px 15px 0; }
   .form-grid { gap: 11px 9px; }
@@ -349,8 +349,8 @@ select option { color: #dedbe7; background: #171621; }
   .image-actions { align-items: flex-start; flex-direction: column; gap: 3px; }
   .image-actions .url-field { width: 100%; }
   .image-results { grid-template-columns: repeat(4,minmax(0,1fr)); }
-  .form-footer { margin-right: -15px; margin-left: -15px; padding-right: 15px; padding-left: 15px; }
-  .form-buttons .button { padding: 0 9px; font-size: 8px; }
+  .form-footer { margin-right: -15px; margin-left: -15px; padding: 12px 15px; }
+  .form-buttons .button { min-height: 44px; padding: 0 10px; font-size: 9px; }
   .details-layout { grid-template-columns: 100px 1fr; gap: 13px; padding: 14px; }
   .details-cover { max-height: 160px; }
   .details-actions { gap: 4px; }
