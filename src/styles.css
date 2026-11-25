@@ -359,3 +359,26 @@ select option { color: #dedbe7; background: #171621; }
   .backup-actions { flex-wrap: wrap; margin-left: 0; }
   .toast { right: 12px; bottom: 76px; }
 }
+
+.nav-link span, .sidebar-note strong, .section-title-row p, .filter-button, .filter-bar select,
+.collection-tabs button, .card-title, .category-picker-label, .category-option, .field input,
+.field select, .field textarea, .url-field input, .section-heading strong, .search-input.compact input,
+.text-button, .detail-pair strong, .detail-copy h3, .detail-copy p, .settings-block h3,
+.settings-block p, .privacy-note strong, .toast { font-size: 12px; }
+.nav-link small, .sidebar-note p, .breadcrumb, .back-button, .global-search input, .button,
+.stat-info small, .sort-select select, .filter-bar label, .empty-state p, .modal-header h2,
+.field > span, .url-field > span, .section-heading small, .provider-note, .inline-message,
+.selected-cover-preview, .favorite-check span, .settings-hint, .privacy-note { font-size: 11px; }
+.sidebar-caption, .eyebrow, .section-kicker, .image-result-unavailable, .modal-header .eyebrow,
+.footer-lock { font-size: 10px; }
+.card-meta, .cover-kind, .card-rating, .page-footer, .pill, .detail-pair span,
+.image-result span { font-size: 10px; }
+.image-search-row .button, .form-buttons .button { font-size: 12px; }
+
+.image-search-row { flex-wrap: wrap; }
+.google-image-button { white-space: nowrap; }
+
+@media (max-width: 600px) {
+  .image-search-row > .button { min-height: 38px; flex: 1 1 auto; padding: 0 9px; font-size: 11px; }
+  .form-buttons .button { font-size: 11px; }
+}

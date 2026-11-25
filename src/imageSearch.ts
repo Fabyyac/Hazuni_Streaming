@@ -180,8 +180,12 @@ export async function searchImages(
   tmdbKey: string,
 ): Promise<ImageResult[]> {
   if (tmdbKey.trim() && kind !== 'game') {
-    const posters = await searchTmdb(query, kind, tmdbKey.trim())
-    if (posters.length > 0) return posters
+    try {
+      const posters = await searchTmdb(query, kind, tmdbKey.trim())
+      if (posters.length > 0) return posters
+    } catch {
+      // Continue with the public image sources when TMDB is unavailable.
+    }
   }
 
   const results = await settleSearches([
