@@ -361,7 +361,7 @@ function App() {
   return (
     <div className="app-shell">
       <aside className="sidebar">
-        <button className="brand" onClick={() => setView('all')} aria-label="HAZUNI STREAMING início"><img src="/logo.png" alt="HAZUNI STREAMING" /><span>YOUR PERSONAL MEDIA LIBRARY</span></button>
+        <button className="brand" onClick={() => setView('all')} aria-label="HAZUNI STREAMING início"><img src={new URL('../logo.png', import.meta.url).href} alt="HAZUNI STREAMING" /><span>YOUR PERSONAL MEDIA LIBRARY</span></button>
         <div className="sidebar-label">MENU PRINCIPAL</div>
         <nav className="main-nav">
           <button className={`nav-link${view === 'all' ? ' active' : ''}`} onClick={() => setView('all')}><Icon name="grid" /><span>Visão geral</span></button>
