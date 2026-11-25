@@ -30,6 +30,16 @@ function words(value: string): string[] {
   return mapped.map((word) => numberWords[word] ?? word)
 }
 
+function searchQueries(query: string, kind: Kind): string[] {
+  if (kind !== 'series') return [query]
+  const normalized = words(query).filter((word) => !['dorama', 'doramas', 'poster', 'capa', 'serie', 'series'].includes(word)).join(' ')
+  const aliases: Record<string, string[]> = {
+    'alquimia das almas': ['Alchemy of Souls'],
+    'alchemy of souls': ['Alquimia das Almas'],
+  }
+  return [...new Set([query, ...(aliases[normalized] ?? [])])]
+}
+
 function scoreTitle(title: string, query: string): number {
   const queryWords = [...new Set(words(query))]
   const titleWords = new Set(words(title))
@@ -179,26 +189,29 @@ export async function searchImages(
   kind: Kind,
   tmdbKey: string,
 ): Promise<ImageResult[]> {
+  const queries = searchQueries(query, kind)
   if (tmdbKey.trim() && kind !== 'game') {
     try {
-      const posters = await searchTmdb(query, kind, tmdbKey.trim())
-      if (posters.length > 0) return posters
+      for (const searchTerm of queries) {
+        const posters = await searchTmdb(searchTerm, kind, tmdbKey.trim())
+        if (posters.length > 0) return posters
+      }
     } catch {
       // Continue with the public image sources when TMDB is unavailable.
     }
   }
 
-  const results = await settleSearches([
-    searchWikipedia(query),
-    searchOpenverse(query),
-    searchOpenverse(`${query} poster`),
-    searchOpenverse(`${query} cover`),
-    searchCommons(query),
-    searchCommons(`${query} poster`),
-    searchTvMaze(query),
-  ])
+  const results = await settleSearches(queries.flatMap((searchTerm) => [
+    searchWikipedia(searchTerm),
+    searchOpenverse(searchTerm),
+    searchOpenverse(`${searchTerm} poster`),
+    searchOpenverse(`${searchTerm} cover`),
+    searchCommons(searchTerm),
+    searchCommons(`${searchTerm} poster`),
+    searchTvMaze(searchTerm),
+  ]))
   const ranked: ScoredImage[] = results
-    .map((image) => ({ ...image, score: scoreTitle(image.title, query) }))
+    .map((image) => ({ ...image, score: Math.max(...queries.map((searchTerm) => scoreTitle(image.title, searchTerm))) }))
     .sort((a, b) => b.score - a.score)
   const exact = new Map<string, ScoredImage>()
   for (const image of ranked) {

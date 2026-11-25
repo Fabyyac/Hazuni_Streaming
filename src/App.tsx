@@ -33,9 +33,10 @@ function Icon({ name, size = 20 }: { name: string; size?: number }) {
   return <svg aria-hidden="true" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">{iconPaths[name]}</svg>
 }
 
-function Cover({ src, kind, large = false }: { src?: string; kind: Kind; large?: boolean }) {
+function Cover({ src, kind, large = false, onError }: { src?: string; kind: Kind; large?: boolean; onError?: () => void }) {
   const [failed, setFailed] = useState(false)
-  if (src && !failed) return <img className={`cover-image${large ? ' cover-large' : ''}`} src={src} alt="" onError={() => setFailed(true)} />
+  useEffect(() => setFailed(false), [src])
+  if (src && !failed) return <img className={`cover-image${large ? ' cover-large' : ''}`} src={src} alt="" onError={() => { setFailed(true); onError?.() }} />
   return <div className={`cover-placeholder ${kind}${large ? ' cover-large' : ''}`}><Icon name={kind === 'movie' ? 'film' : kind === 'series' ? 'tv' : 'game'} size={large ? 34 : 27} /><span>HAZUNI</span></div>
 }
 
@@ -115,7 +116,10 @@ function MediaForm({ kind, item, onSave, onClose }: { kind: Kind; item?: MediaIt
   const [imageError, setImageError] = useState('')
   const [submitError, setSubmitError] = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
-  const setField = (field: keyof MediaItem, value: string | boolean) => setDraft((current) => ({ ...current, [field]: value }))
+  const setField = (field: keyof MediaItem, value: string | boolean) => {
+    setDraft((current) => ({ ...current, [field]: value }))
+    if (field === 'cover') setImageError('')
+  }
   const changeKind = (nextKind: Kind) => {
     setSelectedKind(nextKind)
     setDraft((current) => ({
@@ -145,15 +149,6 @@ function MediaForm({ kind, item, onSave, onClose }: { kind: Kind; item?: MediaIt
     } catch (error) {
       setImageError(error instanceof Error ? error.message : 'Erro ao pesquisar imagens.')
     } finally { setSearching(false) }
-  }
-  const searchGoogleImages = () => {
-    const searchTerm = query.trim() || String(draft.title ?? '').trim()
-    if (!searchTerm) { setImageError('Digite o título para pesquisar no Google Imagens.'); return }
-    const mediaTerm = selectedKind === 'series' ? 'dorama série pôster' : selectedKind === 'movie' ? 'filme pôster' : 'jogo capa'
-    const googleUrl = new URL('https://www.google.com/search')
-    googleUrl.searchParams.set('tbm', 'isch')
-    googleUrl.searchParams.set('q', `${searchTerm} ${mediaTerm}`)
-    window.open(googleUrl.toString(), '_blank', 'noopener,noreferrer')
   }
   const handleFile = (file?: File) => {
     if (!file) return
@@ -206,13 +201,13 @@ function MediaForm({ kind, item, onSave, onClose }: { kind: Kind; item?: MediaIt
           <label className="field field-span"><span>{title} <i>*</i></span><input required autoFocus value={draft.title ?? ''} onChange={(event) => { setField('title', event.target.value); setQuery((current) => !current || current === String(draft.title ?? '') ? event.target.value : current) }} placeholder={selectedKind === 'game' ? 'Ex.: The Last of Us Part II' : selectedKind === 'series' ? 'Ex.: The Rookie' : 'Ex.: Interestelar'} /></label>
           <section className="image-picker field-span">
             <div className="section-heading"><span className="section-icon"><Icon name="image" size={17} /></span><div><strong>Capa ou pôster</strong><small>Escolha uma imagem da internet ou do seu dispositivo</small></div></div>
-            <div className="image-search-row"><div className="search-input compact"><Icon name="search" size={17} /><input aria-label="Título para buscar capas" value={query} onChange={(event) => setQuery(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); void handleSearch() } }} placeholder={`Pesquisar capas de ${draft.title || 'um título'}...`} /></div><button type="button" className="button button-secondary" disabled={searching} onClick={() => void handleSearch()}>{searching ? 'Buscando...' : 'Buscar capas'}</button><button type="button" className="button button-secondary google-image-button" onClick={searchGoogleImages}>Google Imagens</button></div>
-            <div className="image-actions"><label className="url-field"><span>URL da imagem</span><input type="url" value={draft.cover?.startsWith('data:') ? '' : draft.cover ?? ''} onChange={(event) => setField('cover', event.target.value)} placeholder="https://..." /></label><input ref={fileRef} hidden type="file" accept="image/*" onChange={(event) => handleFile(event.target.files?.[0])} /><button type="button" className="text-button" onClick={() => fileRef.current?.click()}><Icon name="upload" size={16} /> Enviar imagem</button></div>
+            <div className="image-search-row"><div className="search-input compact"><Icon name="search" size={17} /><input aria-label="Título para buscar capas" value={query} onChange={(event) => setQuery(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); void handleSearch() } }} placeholder={`Pesquisar capas de ${draft.title || 'um título'}...`} /></div><button type="button" className="button button-secondary" disabled={searching} onClick={() => void handleSearch()}>{searching ? 'Buscando...' : 'Buscar capas'}</button></div>
+            <div className="image-actions"><label className="url-field"><span>URL direta da imagem</span><input type="url" value={draft.cover?.startsWith('data:') ? '' : draft.cover ?? ''} onChange={(event) => setField('cover', event.target.value)} placeholder="https://...jpg" /></label><input ref={fileRef} hidden type="file" accept="image/*" onChange={(event) => handleFile(event.target.files?.[0])} /><button type="button" className="text-button" onClick={() => fileRef.current?.click()}><Icon name="upload" size={16} /> Enviar imagem</button></div>
             {imageError && <p className="inline-message">{imageError}</p>}
             {results.some((result) => result.related) && <p className="inline-message">Não encontramos capas com correspondência exata. Estas são imagens relacionadas; confira antes de selecionar.</p>}
             {results.length > 0 && <div className="image-results">{results.map((result) => <ImageResultOption key={result.id} result={result} selected={draft.cover === result.image || draft.cover === result.fallbackImage} onSelect={(image) => setField('cover', image)} />)}</div>}
-            {!results.length && draft.cover && <div className="selected-cover-preview"><Cover src={draft.cover} kind={kind} /><span>Pré-visualização da capa selecionada</span><button type="button" className="text-button" onClick={() => setField('cover', '')}>Remover</button></div>}
-            <small className="provider-note">Google Imagens abre em outra aba. Para usar uma imagem de lá, copie o endereço e cole em URL da imagem. {localStorage.getItem('hazuni-tmdb-key') && selectedKind !== 'game' ? 'A busca também consulta TMDB, Wikipedia, TVmaze, Openverse e Wikimedia Commons.' : 'A busca automática consulta Wikipedia, TVmaze, Openverse e Wikimedia Commons.'}</small>
+            {!results.length && draft.cover && <div className="selected-cover-preview"><Cover src={draft.cover} kind={kind} onError={() => setImageError('Esse endereço não é uma imagem direta. Pesquise a capa acima ou use o link direto de um arquivo de imagem.')}/><span>Pré-visualização da capa selecionada</span><button type="button" className="text-button" onClick={() => setField('cover', '')}>Remover</button></div>}
+            <small className="provider-note">Os resultados aparecem aqui. {localStorage.getItem('hazuni-tmdb-key') && selectedKind !== 'game' ? 'Busca em TMDB, Wikipedia, TVmaze, Openverse e Wikimedia Commons.' : 'Busca em Wikipedia, TVmaze, Openverse e Wikimedia Commons.'}</small>
           </section>
           <label className="field"><span>Ano de lançamento</span><input type="number" min="1888" max="2100" value={draft.year ?? ''} onChange={(event) => setField('year', event.target.value)} placeholder="2024" /></label>
           <label className="field"><span>Gênero</span><input value={draft.genre ?? ''} onChange={(event) => setField('genre', event.target.value)} placeholder="Ação, drama..." /></label>
